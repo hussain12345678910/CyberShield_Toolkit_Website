@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield – Password Strength Checker</title>
+  <style>
+    /* ── BASE ── */
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0e1a;
+      color: #e0e6f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* Grid lines background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── BACK BUTTON ── */
+    .back-btn {
+      position: relative;
+      z-index: 1;
+      align-self: flex-start;
+      padding: 14px 24px;
+      color: #00e5ff;
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: 0.5px;
+      transition: color 0.3s;
+    }
+    .back-btn:hover { color: #fff; }
+
+    /* ── TOOL WINDOW (mimics the popup window in screenshot) ── */
+    .tool-window {
+      position: relative;
+      z-index: 1;
+      background: #0d1220;
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 14px;
+      width: 560px;
+      max-width: 95vw;
+      margin: 20px auto 40px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,229,255,0.1);
+    }
+
+    /* Title bar */
+    .title-bar {
+      background: rgba(0,229,255,0.08);
+      border-bottom: 1px solid rgba(0,229,255,0.2);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-bar-dot {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+    }
+    .dot-red   { background: #ff5f57; }
+    .dot-yellow{ background: #febc2e; }
+    .dot-green { background: #28c840; }
+
+    .title-bar-text {
+      color: #00e5ff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-left: 6px;
+    }
+
+    /* Body */
+    .tool-body {
+      padding: 36px 40px;
+      text-align: center;
+    }
+
+    .tool-title {
+      font-size: 1.5rem;
+      color: #00e5ff;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .tool-subtitle {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 30px;
+      letter-spacing: 1px;
+    }
+
+    /* Input */
+    .input-group {
+      position: relative;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: #00e5ff;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    input[type="text"], input[type="password"] {
+      width: 100%;
+      padding: 13px 44px 13px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,229,255,0.25);
+      border-radius: 8px;
+      color: #e0e6f0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      border-color: #00e5ff;
+      box-shadow: 0 0 12px rgba(0,229,255,0.15);
+    }
+
+    /* Eye toggle */
+    .eye-btn {
+      position: absolute;
+      right: 14px;
+      bottom: 13px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: #64748b;
+    }
+
+    /* Buttons row */
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 11px 26px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+    .btn-check { background: #00e5ff; color: #0a0e1a; }
+    .btn-clear { background: #ef4444; color: #fff; }
+
+    /* Strength meter */
+    .meter-wrap {
+      display: none;
+      text-align: left;
+      margin-top: 10px;
+    }
+
+    .meter-label {
+      font-size: 12px;
+      color: #64748b;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+    }
+
+    .meter-bar-bg {
+      background: rgba(255,255,255,0.07);
+      border-radius: 6px;
+      height: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .meter-bar {
+      height: 100%;
+      border-radius: 6px;
+      transition: width 0.6s ease, background 0.4s;
+    }
+
+    /* Result box */
+    .result-box {
+      display: none;
+      padding: 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* Criteria checklist */
+    .criteria {
+      display: none;
+      list-style: none;
+      text-align: left;
+      margin-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+      padding-top: 18px;
+    }
+
+    .criteria li {
+      font-size: 13px;
+      padding: 5px 0;
+      color: #64748b;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .criteria li.pass { color: #22c55e; }
+    .criteria li.fail { color: #64748b; }
+
+    .check-icon { font-size: 15px; }
+  </style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+  <div class="tool-window">
+
+    <!-- Title bar -->
+    <div class="title-bar">
+      <div class="title-bar-dot dot-red"></div>
+      <div class="title-bar-dot dot-yellow"></div>
+      <div class="title-bar-dot dot-green"></div>
+      <span class="title-bar-text">🔐 CyberShield Password Checker</span>
+    </div>
+
+    <div class="tool-body">
+      <h1 class="tool-title">Password Strength Checker</h1>
+      <p class="tool-subtitle">Real-Time Analysis · Security Module</p>
+
+      <!-- Input -->
+      <div class="input-group">
+        <label>Enter Password</label>
+        <input type="password" id="pwInput" placeholder="Type your password here…" oninput="liveCheck()">
+        <button class="eye-btn" onclick="toggleEye()" id="eyeBtn">👁️</button>
+      </div>
+
+      <!-- Buttons -->
+      <div class="btn-row">
+        <button class="btn btn-check" onclick="checkPassword()">CHECK</button>
+        <button class="btn btn-clear" onclick="clearAll()">CLEAR</button>
+      </div>
+
+      <!-- Strength meter -->
+      <div class="meter-wrap" id="meterWrap">
+        <div class="meter-label">Strength Level</div>
+        <div class="meter-bar-bg">
+          <div class="meter-bar" id="meterBar" style="width:0%"></div>
+        </div>
+        <div class="result-box" id="resultBox"></div>
+        <ul class="criteria" id="criteria">
+          <li id="cLen">  <span class="check-icon">○</span> At least 8 characters</li>
+          <li id="cUpper"><span class="check-icon">○</span> Contains uppercase letter</li>
+          <li id="cLower"><span class="check-icon">○</span> Contains lowercase letter</li>
+          <li id="cNum">  <span class="check-icon">○</span> Contains a number</li>
+          <li id="cSym">  <span class="check-icon">○</span> Contains a symbol (!@#$…)</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // ── LOGIC (from ahsan.py – check_password) ──────────────
+
+    function analysePassword(pw) {
+      return {
+        len:   pw.length,
+        upper: /[A-Z]/.test(pw),
+        lower: /[a-z]/.test(pw),
+        num:   /[0-9]/.test(pw),
+        sym:   /[^A-Za-z0-9]/.test(pw)
+      };
+    }
+
+    function getScore(a) {
+      let s = 0;
+      if (a.upper) s++;
+      if (a.lower) s++;
+      if (a.num)   s++;
+      if (a.sym)   s++;
+      return s;
+    }
+
+    function checkPassword() {
+      const pw  = document.getElementById('pwInput').value;
+      if (!pw) return;
+
+      const a = analysePassword(pw);
+      const score = getScore(a);
+
+      // Show / hide elements
+      document.getElementById('meterWrap').style.display = 'block';
+      document.getElementById('resultBox').style.display = 'block';
+      document.getElementById('criteria').style.display  = 'block';
+
+      const bar = document.getElementById('meterBar');
+      const box = document.getElementById('resultBox');
+
+      if (a.len >= 8 && score === 4) {
+        bar.style.width      = '100%';
+        bar.style.background = '#22c55e';
+        box.style.background = 'rgba(34,197,94,0.12)';
+        box.style.color      = '#22c55e';
+        box.style.border     = '1px solid rgba(34,197,94,0.3)';
+        box.textContent      = '✅  STRONG PASSWORD';
+      } else if (a.len >= 6 && score >= 2) {
+        bar.style.width      = '55%';
+        bar.style.background = '#f59e0b';
+        box.style.background = 'rgba(245,158,11,0.12)';
+        box.style.color      = '#f59e0b';
+        box.style.border     = '1px solid rgba(245,158,11,0.3)';
+        box.textContent      = '⚠️  MEDIUM PASSWORD';
+      } else {
+        bar.style.width      = '20%';
+        bar.style.background = '#ef4444';
+        box.style.background = 'rgba(239,68,68,0.12)';
+        box.style.color      = '#ef4444';
+        box.style.border     = '1px solid rgba(239,68,68,0.3)';
+        box.textContent      = '❌  WEAK PASSWORD';
+      }
+
+      // Criteria checklist
+      setCheck('cLen',   a.len >= 8);
+      setCheck('cUpper', a.upper);
+      setCheck('cLower', a.lower);
+      setCheck('cNum',   a.num);
+      setCheck('cSym',   a.sym);
+    }
+
+    function setCheck(id, pass) {
+      const el = document.getElementById(id);
+      el.className = pass ? 'pass' : 'fail';
+      el.querySelector('.check-icon').textContent = pass ? '✔' : '○';
+    }
+
+    function liveCheck() {
+      const pw = document.getElementById('pwInput').value;
+      if (pw.length > 0) checkPassword();
+      else clearAll();
+    }
+
+    function clearAll() {
+      document.getElementById('pwInput').value = '';
+      document.getElementById('meterWrap').style.display = 'none';
+      document.getElementById('resultBox').style.display = 'none';
+      document.getElementById('criteria').style.display  = 'none';
+    }
+
+    function toggleEye() {
+      const inp = document.getElementById('pwInput');
+      const btn = document.getElementById('eyeBtn');
+      if (inp.type === 'password') {
+        inp.type = 'text';
+        btn.textContent = '🙈';
+      } else {
+        inp.type = 'password';
+        btn.textContent = '👁️';
+      }
+    }
+  </script>
+
+</body>
+</html>

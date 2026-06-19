@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}AhsanTools — CyberShield{% endblock %}
+
+{% block extra_css %}
+<style>
+  .zt-wrapper { display: flex; min-height: 100vh; }
+
+  /* SIDEBAR */
+  .zt-sidebar {
+    width: 280px;
+    min-height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background: rgba(8,17,31,.95);
+    backdrop-filter: blur(20px);
+    border-right: 1px solid rgba(0,240,255,.1);
+    padding: 30px 20px;
+    z-index: 100;
+  }
+
+  .zt-logo { text-align: center; margin-bottom: 40px; }
+  .zt-logo h2 { color:#00f0ff; font-family:Orbitron,sans-serif; }
+  .zt-logo p { color:#7c8aa5; font-size:.8rem; }
+
+  .zt-menu { list-style:none; padding:0; }
+  .zt-menu a {
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 14px;
+    margin-bottom:8px;
+    border-radius:12px;
+    color:#cbd5e1;
+    text-decoration:none;
+    border:1px solid transparent;
+    transition:.3s;
+  }
+
+  .zt-menu a:hover,
+  .zt-menu a.active {
+    background: rgba(0,240,255,.08);
+    border-color: rgba(0,240,255,.2);
+    color:#00f0ff;
+  }
+
+  /* MAIN */
+  .zt-main {
+    margin-left: 280px;
+    padding: 40px;
+  }
+
+  /* TOOL PANEL */
+  .tool-panel {
+    background: #0d1220;
+    border: 1px solid rgba(0,240,255,.1);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 0 40px rgba(0,240,255,.08);
+  }
+
+  .tool-form-group { margin-bottom: 15px; }
+
+  input, select, textarea {
+    width: 100%;
+    padding: 12px;
+    background: rgba(0,0,0,.3);
+    border: 1px solid rgba(0,240,255,.2);
+    border-radius: 10px;
+    color:#fff;
+    outline:none;
+  }
+
+  .run-btn {
+    padding: 12px 30px;
+    background: linear-gradient(90deg,#00f0ff,#00ff88);
+    border:none;
+    border-radius:50px;
+    cursor:pointer;
+    font-weight:bold;
+    margin-top:10px;
+  }
+
+  .result-table {
+    width:100%;
+    margin-top:15px;
+    border-collapse:collapse;
+  }
+
+  .result-table th,
+  .result-table td {
+    padding:10px;
+    border-bottom:1px solid rgba(255,255,255,.1);
+    color:#cbd5e1;
+  }
+
+  .result-summary {
+    margin-top:15px;
+    padding:10px;
+    background:rgba(0,255,136,.08);
+    color:#00ff88;
+    border-radius:8px;
+  }
+
+  .result-error {
+    margin-top:15px;
+    padding:10px;
+    background:rgba(255,0,0,.1);
+    color:red;
+    border-radius:8px;
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+
+<!-- SIDEBAR -->
+<div class="zt-sidebar">
+  <div class="zt-logo">
+    <h2>Ahsan Tools</h2>
+    <p>Cyber Toolkit</p>
+  </div>
+
+  <ul class="zt-menu">
+    <li><a href="#" class="tool-nav-link active" data-tool="caesar">Caesar Cipher</a></li>
+    <li><a href="#" class="tool-nav-link" data-tool="hash">Hash Generator</a></li>
+    <li><a href="#" class="tool-nav-link" data-tool="random">Random Password</a></li>
+    <li><a href="#" class="tool-nav-link" data-tool="strength">Password Checker</a></li>
+    <li><a href="javascript:history.back()">← Back</a></li>
+  </ul>
+</div>
+
+<!-- MAIN -->
+<div class="zt-main">
+
+  <div class="tool-panel">
+    <div id="panelContent">Select a tool</div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+
+let currentTool = null;
+window.currentToolConfig = null;
+
+/* LOAD TOOL */
+async function loadTool(toolName) {
+
+    currentTool = toolName;
+
+    const resp = await fetch('/api/tool-config/' + toolName + '/');
+    const config = await resp.json();
+
+    window.currentToolConfig = config;
+
+    let html = `<h2 style="color:#00f0ff">${config.name}</h2>
+                <p style="color:#7c8aa5">${config.description}</p>`;
+
+    if (config.fields && config.fields.length) {
+
+        config.fields.forEach(f => {
+
+            if (f.type === "select") {
+
+                let options = (f.options || []).map(opt =>
+                    `<option value="${opt.value || opt}">
+                        ${opt.label || opt}
+                    </option>`
+                ).join("");
+
+                html += `
+                <div class="tool-form-group">
+                    <select id="field_${f.name}">
+                        ${options}
+                    </select>
+                </div>`;
+            }
+
+            else if (f.type === "textarea") {
+                html += `
+                <div class="tool-form-group">
+                    <textarea id="field_${f.name}"
+                        placeholder="${f.placeholder || ''}"></textarea>
+                </div>`;
+            }
+
+            else {
+                html += `
+                <div class="tool-form-group">
+                    <input id="field_${f.name}"
+                        placeholder="${f.placeholder || ''}">
+                </div>`;
+            }
+        });
+    }
+
+    html += `<button class="run-btn" onclick="executeTool('${toolName}')">
+                Run Tool
+             </button>
+
+             <div id="resultSection"></div>`;
+
+    document.getElementById('panelContent').innerHTML = html;
+}
+
+/* EXECUTE TOOL */
+async function executeTool(toolName) {
+
+    const config = window.currentToolConfig;
+    if (!config) return;
+
+    const data = {};
+
+    config.fields.forEach(f => {
+        const el = document.getElementById('field_' + f.name);
+        if (el) data[f.name] = el.value;
+    });
+
+    const resultSection = document.getElementById('resultSection');
+
+    resultSection.innerHTML = `<p style="color:#00f0ff">Running tool...</p>`;
+
+    try {
+        const resp = await fetch('/api/tools/' + toolName + '/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await resp.json();
+
+        if (!result.success) {
+            resultSection.innerHTML = `<div class="result-error">${result.error}</div>`;
+            return;
+        }
+
+        let html = `<div class="result-summary">${result.summary}</div>`;
+
+        if (result.rows) {
+            html += `<table class="result-table">
+                        <tr>${result.columns.map(c => `<th>${c}</th>`).join('')}</tr>
+                        ${result.rows.map(r =>
+                            `<tr>${r.map(x => `<td>${x}</td>`).join('')}</tr>`
+                        ).join('')}
+                     </table>`;
+        }
+
+        resultSection.innerHTML = html;
+
+    } catch (err) {
+        resultSection.innerHTML = `<div class="result-error">${err.message}</div>`;
+    }
+}
+
+/* CSRF */
+function getCookie(name) {
+    let cookieValue = null;
+    document.cookie.split(';').forEach(c => {
+        c = c.trim();
+        if (c.startsWith(name + '=')) {
+            cookieValue = decodeURIComponent(c.split('=')[1]);
+        }
+    });
+    return cookieValue;
+}
+
+/* EVENTS */
+document.querySelectorAll('.tool-nav-link').forEach(link => {
+    link.addEventListener('click', e => {
+        e.preventDefault();
+
+        document.querySelectorAll('.tool-nav-link')
+            .forEach(l => l.classList.remove('active'));
+
+        link.classList.add('active');
+
+        loadTool(link.dataset.tool);
+    });
+});
+
+/* DEFAULT TOOL */
+loadTool('caesar');
+
+</script>
+{% endblock %}

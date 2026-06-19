@@ -1,0 +1,68 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SecurePanel | Login</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif}
+    body{min-height:100vh;display:flex;justify-content:center;align-items:center;background:#050505;overflow:hidden;position:relative;padding-top:90px}
+    body::before{content:'';position:absolute;width:100%;height:100%;background:linear-gradient(rgba(0,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,255,.08) 1px,transparent 1px);background-size:50px 50px;animation:gridMove 20s linear infinite}
+    @keyframes gridMove{from{transform:translateY(0)}to{transform:translateY(50px)}}
+    .glow1,.glow2{position:absolute;border-radius:50%;filter:blur(120px)}
+    .glow1{width:300px;height:300px;background:#00ffff;top:-80px;left:-80px}
+    .glow2{width:300px;height:300px;background:#008cff;bottom:-100px;right:-100px}
+    nav{position:fixed;top:0;left:0;width:100%;padding:20px 8%;display:flex;justify-content:space-between;align-items:center;background:rgba(10,10,10,.85);backdrop-filter:blur(15px);border-bottom:1px solid rgba(0,255,255,.2);z-index:999}
+    .logo{font-size:30px;font-weight:bold;color:white;letter-spacing:2px}
+    .logo span{color:#00ffff;text-shadow:0 0 15px #00ffff}
+    .nav-right{display:flex;gap:12px}
+    .nav-btn{text-decoration:none;padding:10px 18px;border-radius:8px;font-weight:600;transition:.3s}
+    .register-btn{color:#00ffff;border:1px solid #00ffff}
+    .register-btn:hover{background:#00ffff;color:black;box-shadow:0 0 15px #00ffff}
+    .back-btn{color:#aaa;border:1px solid #333}
+    .back-btn:hover{color:white;border-color:#666;background:#111}
+    .login-box{width:430px;background:rgba(10,10,10,.75);backdrop-filter:blur(25px);border:1px solid rgba(0,255,255,.2);border-radius:25px;padding:45px;position:relative;z-index:10;box-shadow:0 0 30px rgba(0,255,255,.15)}
+    .login-box h2{text-align:center;color:#00ffff;margin-bottom:10px;font-size:40px;text-shadow:0 0 15px #00ffff}
+    .subtitle{text-align:center;color:#888;margin-bottom:35px}
+    .alert-msg{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.3);color:#ef4444;padding:10px 15px;border-radius:10px;margin-bottom:20px;text-align:center;font-size:.9rem}
+    .input-box{position:relative;margin-bottom:20px}
+    .input-box i{position:absolute;left:15px;top:17px;color:#00ffff}
+    .input-box input{width:100%;padding:15px 15px 15px 45px;background:#0f0f0f;border:1px solid #222;border-radius:10px;color:white;outline:none;transition:.3s}
+    .input-box input:focus{border-color:#00ffff;box-shadow:0 0 15px rgba(0,255,255,.3)}
+    .login-btn{width:100%;padding:15px;border:none;border-radius:10px;background:#00ffff;color:black;font-size:16px;font-weight:bold;cursor:pointer;transition:.4s;margin-top:10px}
+    .login-btn:hover{box-shadow:0 0 25px #00ffff;transform:translateY(-2px)}
+    .bottom-text{text-align:center;margin-top:25px;color:#999}
+    .bottom-text a{color:#00ffff;text-decoration:none}
+    .security-badge{text-align:center;margin-top:25px;color:#00ffff;font-size:13px;letter-spacing:1px}
+    @media(max-width:500px){.login-box{width:92%;padding:30px}.login-box h2{font-size:32px}nav{padding:15px 5%}.logo{font-size:24px}}
+  </style>
+</head>
+<body>
+  <div class="glow1"></div>
+  <div class="glow2"></div>
+  <nav>
+    <div class="logo">Secure<span>Panel</span></div>
+    <div class="nav-right">
+      <a href="javascript:history.back()" class="nav-btn back-btn"><i class="fa-solid fa-arrow-left"></i> Go Back</a>
+      <a href="{% url 'register' %}" class="nav-btn register-btn">Register</a>
+    </div>
+  </nav>
+  <div class="login-box">
+    <h2>LOGIN</h2>
+    <p class="subtitle">Secure Access Portal</p>
+    {% if messages %}
+      {% for msg in messages %}<div class="alert-msg">{{ msg }}</div>{% endfor %}
+    {% endif %}
+    <form method="post" action="{% url 'login' %}">
+      {% csrf_token %}
+      <div class="input-box"><i class="fa-solid fa-user"></i><input type="text" name="username" placeholder="Username" required></div>
+      <div class="input-box"><i class="fa-solid fa-lock"></i><input type="password" name="password" placeholder="Password" required></div>
+      <button type="submit" class="login-btn"><i class="fa-solid fa-shield-halved"></i> Secure Login</button>
+    </form>
+    <div class="bottom-text">Don't have an account? <a href="{% url 'register' %}">Register</a></div>
+    <div class="security-badge"><i class="fa-solid fa-fingerprint"></i> SECURE AUTHENTICATION SYSTEM</div>
+  </div>
+</body>
+</html>

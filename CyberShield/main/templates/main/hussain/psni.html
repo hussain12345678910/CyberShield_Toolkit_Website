@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield – Packet Sniffer</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Courier New',monospace;
+      background:#0a0e1a; color:#e0e6f0;
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size:40px 40px; pointer-events:none; z-index:0;
+    }
+    .back-btn {
+      position:relative; z-index:1; align-self:flex-start;
+      padding:14px 24px; color:#00e5ff; text-decoration:none;
+      font-size:13px; letter-spacing:0.5px; transition:color 0.3s;
+    }
+    .back-btn:hover { color:#fff; }
+
+    .tool-window {
+      position:relative; z-index:1;
+      background:#0d1220; border:1px solid rgba(0,229,255,0.3);
+      border-radius:14px; width:760px; max-width:95vw;
+      margin:20px auto 40px; overflow:hidden;
+      box-shadow:0 0 40px rgba(0,229,255,0.1);
+    }
+    .title-bar {
+      background:rgba(0,229,255,0.08);
+      border-bottom:1px solid rgba(0,229,255,0.2);
+      padding:14px 20px; display:flex; align-items:center; gap:10px;
+    }
+    .dot { width:12px; height:12px; border-radius:50%; }
+    .dot-r{ background:#ff5f57; } .dot-y{ background:#febc2e; } .dot-g{ background:#28c840; }
+    .title-bar-text { color:#00e5ff; font-size:13px; font-weight:700; letter-spacing:1px; margin-left:6px; }
+
+    .tool-body { padding:36px 40px; }
+    .tool-title { font-size:1.5rem; color:#00e5ff; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; text-align:center; }
+    .tool-subtitle { font-size:13px; color:#64748b; margin-bottom:30px; letter-spacing:1px; text-align:center; }
+
+    label { display:block; font-size:12px; color:#00e5ff; letter-spacing:1px; margin-bottom:8px; text-transform:uppercase; }
+
+    /* Controls row */
+    .controls-row {
+      display:flex; gap:14px; align-items:flex-end; margin-bottom:20px; flex-wrap:wrap;
+    }
+    .ctrl-group { flex:1; min-width:140px; }
+
+    select, input[type="number"] {
+      width:100%; padding:12px 14px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(0,229,255,0.25); border-radius:8px;
+      color:#e0e6f0; font-family:'Courier New',monospace; font-size:13px;
+      outline:none; transition:border-color 0.3s;
+      appearance:none;
+    }
+    select:focus, input[type="number"]:focus {
+      border-color:#00e5ff; box-shadow:0 0 12px rgba(0,229,255,0.15);
+    }
+
+    .btn-row { display:flex; gap:10px; justify-content:center; margin-bottom:20px; flex-wrap:wrap; }
+    .btn {
+      padding:11px 26px; font-family:'Courier New',monospace;
+      font-size:13px; font-weight:700; letter-spacing:1px;
+      border:none; border-radius:6px; cursor:pointer;
+      transition:transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform:translateY(-2px); opacity:0.9; }
+    .btn-start { background:#00e5ff; color:#0a0e1a; }
+    .btn-stop  { background:#ef4444; color:#fff; }
+    .btn-clear { background:#475569; color:#fff; }
+    .btn-export{ background:#22c55e; color:#fff; }
+
+    /* Status bar */
+    .status-bar {
+      display:flex; align-items:center; gap:10px; margin-bottom:14px;
+      padding:10px 14px;
+      background:rgba(255,255,255,0.04); border-radius:8px;
+      border:1px solid rgba(255,255,255,0.07);
+    }
+    .status-dot { width:10px; height:10px; border-radius:50%; background:#475569; flex-shrink:0; }
+    .status-dot.active { background:#22c55e; animation:blink 1s infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+    .status-text { font-size:12px; color:#64748b; flex:1; }
+    .pkt-counter { font-size:12px; font-weight:700; color:#00e5ff; }
+
+    /* Packet table */
+    .pkt-table-wrap {
+      background:rgba(0,0,0,0.3); border-radius:10px;
+      border:1px solid rgba(0,229,255,0.15);
+      overflow:hidden; max-height:320px; overflow-y:auto;
+    }
+    .pkt-table-wrap::-webkit-scrollbar { width:6px; }
+    .pkt-table-wrap::-webkit-scrollbar-track { background:#0d1220; }
+    .pkt-table-wrap::-webkit-scrollbar-thumb { background:#00e5ff44; border-radius:3px; }
+
+    table { width:100%; border-collapse:collapse; font-size:11px; }
+    thead th {
+      background:#152030; color:#00e5ff; font-weight:700;
+      padding:10px 12px; text-align:left; letter-spacing:0.5px;
+      position:sticky; top:0; z-index:1;
+      border-bottom:1px solid rgba(0,229,255,0.2);
+    }
+    tbody tr { border-bottom:1px solid rgba(255,255,255,0.04); transition:background 0.2s; }
+    tbody tr:hover { background:rgba(0,229,255,0.05); }
+    tbody td { padding:9px 12px; color:#94a3b8; vertical-align:middle; }
+    .td-num { color:#64748b; }
+    .td-time { color:#64748b; }
+    .td-proto { font-weight:700; }
+    .proto-tcp  { color:#00e5ff; }
+    .proto-udp  { color:#a78bfa; }
+    .proto-icmp { color:#f59e0b; }
+    .proto-arp  { color:#22c55e; }
+    .proto-dns  { color:#f472b6; }
+    .proto-http { color:#34d399; }
+    .td-src, .td-dst { font-family:'Courier New',monospace; }
+    .td-summary { color:#64748b; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  </style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+
+  <div class="tool-window">
+    <div class="title-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <span class="title-bar-text">📡 CyberShield Packet Sniffer</span>
+    </div>
+
+    <div class="tool-body">
+      <h1 class="tool-title">Packet Sniffer</h1>
+      <p class="tool-subtitle">Live Capture Simulation · Network Analysis Module</p>
+
+      <div class="controls-row">
+        <div class="ctrl-group">
+          <label>Protocol Filter</label>
+          <select id="protoFilter">
+            <option value="ALL">ALL Protocols</option>
+            <option value="TCP">TCP Only</option>
+            <option value="UDP">UDP Only</option>
+            <option value="ICMP">ICMP Only</option>
+            <option value="ARP">ARP Only</option>
+            <option value="DNS">DNS Only</option>
+          </select>
+        </div>
+        <div class="ctrl-group">
+          <label>Packet Count</label>
+          <input type="number" id="pktCount" value="10" min="1" max="50">
+        </div>
+        <div class="ctrl-group">
+          <label>Speed (ms/packet)</label>
+          <select id="speed">
+            <option value="400">Slow</option>
+            <option value="200" selected>Normal</option>
+            <option value="80">Fast</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-start"  id="startBtn"  onclick="startSniff()">START</button>
+        <button class="btn btn-stop"   id="stopBtn"   onclick="stopSniff()"  disabled>STOP</button>
+        <button class="btn btn-clear"  onclick="clearAll()">CLEAR</button>
+        <button class="btn btn-export" onclick="exportLog()">EXPORT</button>
+      </div>
+
+      <div class="status-bar">
+        <div class="status-dot" id="statusDot"></div>
+        <span class="status-text" id="statusText">Ready to capture</span>
+        <span class="pkt-counter" id="pktCounter">0 packets</span>
+      </div>
+
+      <div class="pkt-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Time</th>
+              <th>Protocol</th>
+              <th>Source</th>
+              <th>Destination</th>
+              <th>Length</th>
+              <th>Summary</th>
+            </tr>
+          </thead>
+          <tbody id="packetBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Simulated packet data (mirrors scapy packet.summary() output style)
+    const PROTOCOLS = ['TCP','UDP','ICMP','ARP','DNS','HTTP'];
+    const SAMPLE_IPS = [
+      '192.168.1.1','192.168.1.105','10.0.0.1','172.16.0.4',
+      '8.8.8.8','1.1.1.1','74.125.200.101','185.60.216.53'
+    ];
+    const SERVICES = {
+      TCP:  ['HTTP','HTTPS','SSH','FTP','SMTP'],
+      UDP:  ['DNS','NTP','DHCP','SNMP'],
+      ICMP: ['Echo Request','Echo Reply','Unreachable'],
+      ARP:  ['Who has','Reply'],
+      DNS:  ['Query','Response'],
+      HTTP: ['GET /','POST /api','200 OK','404 Not Found']
+    };
+
+    function randIp() { return SAMPLE_IPS[Math.floor(Math.random()*SAMPLE_IPS.length)]; }
+    function randInt(a,b) { return Math.floor(Math.random()*(b-a+1))+a; }
+    function randPort() { return [21,22,80,443,53,8080,3306,110][Math.floor(Math.random()*8)]; }
+
+    function genPacket(num, filterProto) {
+      const protos = filterProto === 'ALL' ? PROTOCOLS : [filterProto];
+      const proto  = protos[Math.floor(Math.random()*protos.length)];
+      const src    = randIp();
+      let   dst    = randIp();
+      while (dst === src) dst = randIp();
+      const len    = randInt(40, 1500);
+      const svcArr = SERVICES[proto] || ['Data'];
+      const svc    = svcArr[Math.floor(Math.random()*svcArr.length)];
+      const now    = new Date();
+      const time   = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}.${String(now.getMilliseconds()).padStart(3,'0')}`;
+      let summary;
+      if (proto === 'TCP' || proto === 'HTTP') {
+        summary = `${src}:${randPort()} > ${dst}:${randPort()} [${svc}] Seq=0 Len=${len}`;
+      } else if (proto === 'UDP' || proto === 'DNS') {
+        summary = `${src} > ${dst} ${svc} Len=${len}`;
+      } else if (proto === 'ICMP') {
+        summary = `${src} > ${dst} ICMP ${svc} id=0x${randInt(0,255).toString(16)} seq=${randInt(1,100)}`;
+      } else {
+        summary = `ARP ${svc} ${dst} tell ${src}`;
+      }
+      return { num, time, proto, src, dst, len, summary };
+    }
+
+    let sniffing = false;
+    let sniffTimer = null;
+    let capturedCount = 0;
+
+    function protoClass(p) {
+      return { TCP:'proto-tcp', UDP:'proto-udp', ICMP:'proto-icmp', ARP:'proto-arp', DNS:'proto-dns', HTTP:'proto-http' }[p] || 'proto-tcp';
+    }
+
+    function appendRow(pkt) {
+      const tbody = document.getElementById('packetBody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="td-num">${pkt.num}</td>
+        <td class="td-time">${pkt.time}</td>
+        <td class="td-proto"><span class="${protoClass(pkt.proto)}">${pkt.proto}</span></td>
+        <td class="td-src">${pkt.src}</td>
+        <td class="td-dst">${pkt.dst}</td>
+        <td>${pkt.len}</td>
+        <td class="td-summary" title="${pkt.summary}">${pkt.summary}</td>`;
+      tbody.appendChild(tr);
+      tbody.parentElement.scrollTop = tbody.parentElement.scrollHeight;
+      document.getElementById('pktCounter').textContent = `${capturedCount} packets`;
+    }
+
+    function startSniff() {
+      const count  = parseInt(document.getElementById('pktCount').value) || 10;
+      const speed  = parseInt(document.getElementById('speed').value);
+      const filter = document.getElementById('protoFilter').value;
+
+      sniffing = true;
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('stopBtn').disabled  = false;
+      document.getElementById('statusDot').classList.add('active');
+      document.getElementById('statusText').textContent = `Capturing packets (filter: ${filter})...`;
+
+      let captured = 0;
+      sniffTimer = setInterval(() => {
+        if (!sniffing || captured >= count) {
+          stopSniff();
+          return;
+        }
+        captured++;
+        capturedCount++;
+        appendRow(genPacket(capturedCount, filter));
+      }, speed);
+    }
+
+    function stopSniff() {
+      sniffing = false;
+      clearInterval(sniffTimer);
+      document.getElementById('startBtn').disabled = false;
+      document.getElementById('stopBtn').disabled  = true;
+      document.getElementById('statusDot').classList.remove('active');
+      document.getElementById('statusText').textContent = `Capture stopped — ${capturedCount} total packets`;
+    }
+
+    function clearAll() {
+      stopSniff();
+      capturedCount = 0;
+      document.getElementById('packetBody').innerHTML = '';
+      document.getElementById('pktCounter').textContent = '0 packets';
+      document.getElementById('statusText').textContent = 'Ready to capture';
+    }
+
+    function exportLog() {
+      const rows = Array.from(document.querySelectorAll('#packetBody tr'));
+      if (!rows.length) return;
+      const lines = ['No,Time,Protocol,Source,Destination,Length,Summary'];
+      rows.forEach(r => {
+        const cells = Array.from(r.querySelectorAll('td')).map(td => td.textContent.trim());
+        lines.push(cells.join(','));
+      });
+      const blob = new Blob([lines.join('\n')], { type:'text/csv' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'packet_capture.csv';
+      a.click();
+    }
+  </script>
+</body>
+</html>

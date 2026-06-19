@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}{{ profile.name }} — CyberShield{% endblock %}
+
+{% block body %}
+<div style="background:#050816;min-height:100vh;color:#e5e7eb;font-family:'Poppins',sans-serif;">
+<div class="container" style="max-width:1100px;padding-top:40px;">
+  <a href="{% url 'dashboard' %}" style="text-decoration:none;color:#00f0ff;font-weight:500;display:inline-block;margin-bottom:20px;">← Back to Dashboard</a>
+  <div style="display:flex;gap:30px;align-items:center;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:30px;backdrop-filter:blur(12px);flex-wrap:wrap;" data-aos="fade-up">
+    <div style="width:140px;height:140px;border-radius:18px;background:linear-gradient(135deg,#00f0ff,#00ff88);display:flex;align-items:center;justify-content:center;font-size:3rem;font-weight:bold;color:black;border:1px solid rgba(0,240,255,0.4);">{{ profile.initial }}</div>
+    <div>
+      <div style="font-size:2rem;font-family:'Orbitron',sans-serif;color:#00f0ff;margin-bottom:5px;">{{ profile.name }}</div>
+      <div style="color:#00ff88;font-size:.9rem;letter-spacing:1px;">{{ profile.role }}</div>
+      <div style="margin-top:10px;color:#a1a1aa;font-size:.95rem;">{{ profile.desc }}</div>
+    </div>
+  </div>
+
+  <div style="margin-top:50px;margin-bottom:20px;font-size:1.4rem;font-weight:600;color:#ffffff;" data-aos="fade-up">
+    Assigned <span style="color:#00f0ff;">Tools</span>
+  </div>
+
+  <div class="row g-3">
+    {% for tool in profile.tools %}
+    <div class="col-md-6 col-lg-3" data-aos="fade-up" data-aos-delay="{{ forloop.counter0 }}00">
+      <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:22px;transition:.25s ease;height:100%;" class="profile-tool-card">
+        <div style="font-weight:600;margin-bottom:6px;color:#ffffff;">{{ tool.title }}</div>
+        <div style="font-size:.9rem;color:#9ca3af;margin-bottom:15px;">{{ tool.desc }}</div>
+        <a href="{{ tool.url }}" style="display:inline-block;padding:8px 14px;font-size:.85rem;border-radius:10px;background:#00f0ff;color:black;text-decoration:none;font-weight:600;transition:.2s;">Launch Tool</a>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+</div>
+<style>
+.profile-tool-card:hover{transform:translateY(-6px);border-color:rgba(0,240,255,0.4)!important;}
+</style>
+{% endblock %}

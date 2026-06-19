@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield – Random Password Generator</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0e1a;
+      color: #e0e6f0;
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size:40px 40px; pointer-events:none; z-index:0;
+    }
+
+    .back-btn {
+      position:relative; z-index:1; align-self:flex-start;
+      padding:14px 24px; color:#00e5ff; text-decoration:none;
+      font-size:13px; letter-spacing:0.5px; transition:color 0.3s;
+    }
+    .back-btn:hover { color:#fff; }
+
+    .tool-window {
+      position:relative; z-index:1;
+      background:#0d1220;
+      border:1px solid rgba(0,229,255,0.3);
+      border-radius:14px; width:620px; max-width:95vw;
+      margin:20px auto 40px; overflow:hidden;
+      box-shadow:0 0 40px rgba(0,229,255,0.1);
+    }
+
+    .title-bar {
+      background:rgba(0,229,255,0.08);
+      border-bottom:1px solid rgba(0,229,255,0.2);
+      padding:14px 20px; display:flex; align-items:center; gap:10px;
+    }
+    .title-bar-dot { width:12px; height:12px; border-radius:50%; }
+    .dot-red   { background:#ff5f57; }
+    .dot-yellow{ background:#febc2e; }
+    .dot-green { background:#28c840; }
+    .title-bar-text { color:#00e5ff; font-size:13px; font-weight:700; letter-spacing:1px; margin-left:6px; }
+
+    .tool-body { padding:36px 40px; }
+    .tool-title { font-size:1.5rem; color:#00e5ff; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; text-align:center; }
+    .tool-subtitle { font-size:13px; color:#64748b; margin-bottom:30px; letter-spacing:1px; text-align:center; }
+
+    label {
+      display:block; font-size:12px; color:#00e5ff;
+      letter-spacing:1px; margin-bottom:8px; text-transform:uppercase;
+    }
+
+    /* Length slider */
+    .length-row {
+      display:flex; align-items:center; gap:16px; margin-bottom:20px;
+    }
+    .length-row label { margin:0; white-space:nowrap; }
+    input[type="range"] { flex:1; accent-color:#00e5ff; height:6px; }
+    .length-val {
+      background:rgba(0,229,255,0.1);
+      border:1px solid rgba(0,229,255,0.3);
+      color:#00e5ff; padding:6px 14px;
+      border-radius:6px; font-size:15px; font-weight:700;
+      min-width:48px; text-align:center;
+    }
+
+    /* Character options */
+    .options-grid {
+      display:grid; grid-template-columns:1fr 1fr;
+      gap:10px; margin-bottom:20px;
+    }
+    .option-item {
+      display:flex; align-items:center; gap:10px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(0,229,255,0.15);
+      border-radius:8px; padding:11px 14px; cursor:pointer;
+      transition:border-color 0.3s, background 0.3s;
+    }
+    .option-item:hover { border-color:rgba(0,229,255,0.4); }
+    .option-item input[type="checkbox"] { accent-color:#00e5ff; width:16px; height:16px; cursor:pointer; }
+    .option-item span { font-size:13px; color:#94a3b8; }
+
+    /* Count selector */
+    .count-row { margin-bottom:24px; }
+    .count-btns { display:flex; gap:8px; flex-wrap:wrap; }
+    .count-btn {
+      padding:8px 18px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(0,229,255,0.2);
+      border-radius:6px; color:#94a3b8;
+      font-family:'Courier New',monospace; font-size:13px;
+      cursor:pointer; transition:all 0.3s;
+    }
+    .count-btn.active, .count-btn:hover {
+      background:rgba(0,229,255,0.1);
+      border-color:#00e5ff; color:#00e5ff;
+    }
+
+    /* Buttons */
+    .btn-row { display:flex; gap:10px; justify-content:center; margin-bottom:28px; flex-wrap:wrap; }
+    .btn {
+      padding:11px 26px; font-family:'Courier New',monospace;
+      font-size:13px; font-weight:700; letter-spacing:1px;
+      border:none; border-radius:6px; cursor:pointer;
+      transition:transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform:translateY(-2px); opacity:0.9; }
+    .btn-gen   { background:#00e5ff; color:#0a0e1a; }
+    .btn-clear { background:#ef4444; color:#fff; }
+
+    /* Password list */
+    .pw-list { display:none; }
+    .pw-list-label { font-size:12px; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:12px; }
+
+    .pw-item {
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(0,229,255,0.12);
+      border-radius:10px; padding:14px 16px;
+      margin-bottom:10px;
+      transition:border-color 0.3s, background 0.3s;
+    }
+    .pw-item:hover {
+      border-color:rgba(0,229,255,0.4);
+      background:rgba(0,229,255,0.05);
+    }
+
+    .pw-text {
+      font-size:13px; color:#e0e6f0; word-break:break-all;
+      flex:1; letter-spacing:0.5px;
+    }
+
+    .pw-actions { display:flex; gap:8px; flex-shrink:0; }
+
+    .pw-btn {
+      padding:6px 14px; font-family:'Courier New',monospace;
+      font-size:11px; font-weight:700; letter-spacing:0.5px;
+      border:none; border-radius:5px; cursor:pointer;
+      transition:transform 0.2s, opacity 0.2s;
+    }
+    .pw-btn:hover { transform:translateY(-1px); opacity:0.85; }
+    .btn-use  { background:#22c55e; color:#fff; }
+    .btn-copy2{ background:#00e5ff; color:#0a0e1a; }
+
+    /* Strength badge */
+    .strength-badge {
+      font-size:10px; font-weight:700; padding:3px 8px;
+      border-radius:4px; flex-shrink:0;
+    }
+    .badge-strong { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
+
+    /* Selected password display */
+    .selected-pw {
+      display:none; margin-top:18px;
+      background:rgba(34,197,94,0.08);
+      border:1px solid rgba(34,197,94,0.3);
+      border-radius:10px; padding:16px 18px;
+    }
+    .selected-pw-label { font-size:11px; color:#22c55e; letter-spacing:1px; text-transform:uppercase; margin-bottom:8px; }
+    .selected-pw-value { font-size:14px; color:#22c55e; word-break:break-all; font-weight:700; }
+
+    .copy-notice { display:none; color:#22c55e; font-size:13px; margin-top:10px; text-align:center; }
+  </style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+
+  <div class="tool-window">
+    <div class="title-bar">
+      <div class="title-bar-dot dot-red"></div>
+      <div class="title-bar-dot dot-yellow"></div>
+      <div class="title-bar-dot dot-green"></div>
+      <span class="title-bar-text">⚡ CyberShield Password Generator</span>
+    </div>
+
+    <div class="tool-body">
+      <h1 class="tool-title">Random Password Generator</h1>
+      <p class="tool-subtitle">Generate Strong Passwords · Pick &amp; Copy</p>
+
+      <!-- Length -->
+      <div class="length-row">
+        <label>Length</label>
+        <input type="range" id="lengthSlider" min="8" max="32" value="12"
+               oninput="document.getElementById('lengthVal').textContent=this.value">
+        <div class="length-val" id="lengthVal">12</div>
+      </div>
+
+      <!-- Options -->
+      <label style="margin-bottom:12px">Include Characters</label>
+      <div class="options-grid">
+        <label class="option-item">
+          <input type="checkbox" id="optUpper" checked>
+          <span>Uppercase (A–Z)</span>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="optLower" checked>
+          <span>Lowercase (a–z)</span>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="optNum" checked>
+          <span>Numbers (0–9)</span>
+        </label>
+        <label class="option-item">
+          <input type="checkbox" id="optSym" checked>
+          <span>Symbols (!@#$…)</span>
+        </label>
+      </div>
+
+      <!-- How many -->
+      <div class="count-row">
+        <label style="margin-bottom:10px">How Many to Generate</label>
+        <div class="count-btns">
+          <button class="count-btn" onclick="setCount(1,this)">1</button>
+          <button class="count-btn active" onclick="setCount(4,this)">4</button>
+          <button class="count-btn" onclick="setCount(6,this)">6</button>
+          <button class="count-btn" onclick="setCount(10,this)">10</button>
+        </div>
+      </div>
+
+      <!-- Generate -->
+      <div class="btn-row">
+        <button class="btn btn-gen"   onclick="generatePasswords()">⚡ GENERATE</button>
+        <button class="btn btn-clear" onclick="clearAll()">CLEAR</button>
+      </div>
+
+      <!-- Password list -->
+      <div class="pw-list" id="pwList">
+        <div class="pw-list-label">Suggested Passwords — Click USE to select</div>
+        <div id="pwItems"></div>
+      </div>
+
+      <!-- Selected -->
+      <div class="selected-pw" id="selectedPw">
+        <div class="selected-pw-label">✔ Selected Password</div>
+        <div class="selected-pw-value" id="selectedVal"></div>
+      </div>
+
+      <div class="copy-notice" id="copyNotice">✔ Copied to clipboard!</div>
+    </div>
+  </div>
+
+  <script>
+    // ── LOGIC (from ahsan.py – random_password) ──────────────
+
+    let generateCount = 4;
+
+    function setCount(n, btn) {
+      generateCount = n;
+      document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function buildCharset() {
+      let chars = '';
+      if (document.getElementById('optUpper').checked) chars += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+      if (document.getElementById('optLower').checked) chars += 'abcdefghijklmnopqrstuvwxyz';
+      if (document.getElementById('optNum').checked)   chars += '0123456789';
+      if (document.getElementById('optSym').checked)   chars += '!@#$%^&*()_+-=[]{}|;:,.<>?';
+      return chars;
+    }
+
+    function makePassword(length, chars) {
+      if (!chars) return '(Select at least one character type)';
+      let pw = '';
+      for (let i = 0; i < length; i++) {
+        pw += chars[Math.floor(Math.random() * chars.length)];
+      }
+      return pw;
+    }
+
+    function generatePasswords() {
+      const length  = parseInt(document.getElementById('lengthSlider').value);
+      const charset = buildCharset();
+
+      const container = document.getElementById('pwItems');
+      container.innerHTML = '';
+
+      for (let i = 0; i < generateCount; i++) {
+        const pw = makePassword(length, charset);
+
+        const item = document.createElement('div');
+        item.className = 'pw-item';
+        item.innerHTML = `
+          <span class="pw-text">${pw}</span>
+          <span class="strength-badge badge-strong">STRONG</span>
+          <div class="pw-actions">
+            <button class="pw-btn btn-use"   onclick="usePw('${pw.replace(/'/g,"\\'")}')">USE</button>
+            <button class="pw-btn btn-copy2" onclick="copyPw('${pw.replace(/'/g,"\\'")}')">COPY</button>
+          </div>
+        `;
+        container.appendChild(item);
+      }
+
+      document.getElementById('pwList').style.display = 'block';
+      document.getElementById('selectedPw').style.display = 'none';
+    }
+
+    function usePw(pw) {
+      document.getElementById('selectedVal').textContent = pw;
+      document.getElementById('selectedPw').style.display = 'block';
+      navigator.clipboard.writeText(pw).then(() => showNotice());
+    }
+
+    function copyPw(pw) {
+      navigator.clipboard.writeText(pw).then(() => showNotice());
+    }
+
+    function showNotice() {
+      const n = document.getElementById('copyNotice');
+      n.style.display = 'block';
+      setTimeout(() => n.style.display = 'none', 2000);
+    }
+
+    function clearAll() {
+      document.getElementById('pwList').style.display = 'none';
+      document.getElementById('selectedPw').style.display = 'none';
+      document.getElementById('pwItems').innerHTML = '';
+      document.getElementById('copyNotice').style.display = 'none';
+    }
+  </script>
+
+</body>
+</html>

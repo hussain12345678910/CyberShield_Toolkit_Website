@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}CyberShield — Command Center{% endblock %}
+
+{% block body %}
+<button class="mobile-menu-btn d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar">
+  <i class="bi bi-list"></i>
+</button>
+<div id="particles-js"></div>
+
+<div class="sidebar">
+  <div class="logo"><h2>CYBERSHIELD</h2><p>Cybersecurity Toolkit</p></div>
+  <ul class="sidebar-menu">
+    <li><a href="{% url 'home' %}"><i class="bi bi-house"></i> Home</a></li>
+    <li><a href="#dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+    <li><a href="#features"><i class="bi bi-shield-lock"></i> Security Modules</a></li>
+    <li><a href="#team"><i class="bi bi-people"></i> Team Agents</a></li>
+    <li><a href="#monitoring"><i class="bi bi-cpu"></i> Monitoring</a></li>
+    <li><a href="{% url 'logout' %}" style="color:#ef4444;"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+  </ul>
+</div>
+
+<div class="offcanvas offcanvas-start mobile-sidebar" tabindex="-1" id="mobileSidebar">
+  <div class="offcanvas-header">
+    <div><h5>CYBERSHIELD</h5><small>Cybersecurity Toolkit</small></div>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body">
+    <ul class="sidebar-menu">
+      <li><a href="{% url 'home' %}"><i class="bi bi-house"></i> Home</a></li>
+      <li><a href="#dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li><a href="#team"><i class="bi bi-people"></i> Team Agents</a></li>
+      <li><a href="#features"><i class="bi bi-shield-lock"></i> Security Modules</a></li>
+      <li><a href="{% url 'logout' %}" style="color:#ef4444;"><i class="bi bi-box-arrow-right"></i> Logout</a></li>
+    </ul>
+  </div>
+</div>
+
+<div class="main-content">
+  <div class="hero-box" id="dashboard" data-aos="fade-up">
+    <h1>CyberShield <span>Command Center</span></h1>
+    <p>Educational cybersecurity toolkit developed for networking, encryption, monitoring, and security analysis in one centralized platform.</p>
+    <div class="hero-buttons">
+      <a href="{% url 'zunairatools' %}" class="hero-btn hero-btn-primary">Launch Tools</a>
+      <a href="#team" class="hero-btn hero-btn-outline">Explore Modules</a>
+    </div>
+    <div class="mini-info">
+      <div class="mini-box"><h5>Desktop Based</h5><p>Python GUI Toolkit</p></div>
+      <div class="mini-box"><h5>Educational Project</h5><p>Cybersecurity Learning</p></div>
+      <div class="mini-box"><h5>Multi Tool System</h5><p>Integrated Security Modules</p></div>
+    </div>
+  </div>
+
+    <div class="section-title" id="team" data-aos="fade-up"><h2>Cyber <span>Agents</span></h2></div>
+  <div class="row g-4">
+    <div class="col-lg-3 col-md-6" data-aos="flip-left">
+      <div class="agent-card"><div class="agent-avatar">Z</div><h4>Zunaira Arshad</h4><div class="agent-role">Project Lead / System Architect</div><p>Django frontend, UI design, dashboard system, tool integration, testing & full system audit.</p><a href="{% url 'zp' %}" class="access-btn">VIEW PROFILE</a></div>
+    </div>
+    <div class="col-lg-3 col-md-6" data-aos="flip-left" data-aos-delay="100">
+      <div class="agent-card"><div class="agent-avatar">U</div><h4>Unaiza Rehman</h4><div class="agent-role">File Security Developer</div><p>File integrity checker, log analyzer, duplicate file detection & metadata tools.</p><a href="{% url 'up' %}" class="access-btn">VIEW PROFILE</a></div>
+    </div>
+    <div class="col-lg-3 col-md-6" data-aos="flip-left" data-aos-delay="200">
+      <div class="agent-card"><div class="agent-avatar">A</div><h4>Ahsan</h4><div class="agent-role">Security Tools Developer</div><p>Encryption tools (Caesar, Hash), password utilities & cryptography modules.</p><a href="{% url 'ap' %}" class="access-btn">VIEW PROFILE</a></div>
+    </div>
+    <div class="col-lg-3 col-md-6" data-aos="flip-left" data-aos-delay="300">
+      <div class="agent-card"><div class="agent-avatar">H</div><h4>Hussain</h4><div class="agent-role">Backend Developer / API Engineer</div><p>API-based architecture, tool execution system, network tools development & backend endpoints.</p><a href="{% url 'hp' %}" class="access-btn">VIEW PROFILE</a></div>
+    </div>
+  </div>
+
+  <div class="section-title" id="features" data-aos="fade-up"><h2>Core <span>Features</span></h2></div>
+  <div class="row g-4">
+    <div class="col-lg-4 col-md-6" data-aos="zoom-in"><div class="feature-box"><div class="feature-icon"><i class="bi bi-router"></i></div><h4>Network Analysis</h4><p>Includes packet analysis, DNS tools, IP utilities, and network security learning modules.</p></div></div>
+    <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="100"><div class="feature-box"><div class="feature-icon"><i class="bi bi-lock"></i></div><h4>Encryption Utilities</h4><p>Explore password analysis, hashing systems, encryption methods, and secure data concepts.</p></div></div>
+    <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="200"><div class="feature-box"><div class="feature-icon"><i class="bi bi-file-earmark-code"></i></div><h4>File Security</h4><p>Analyze metadata, detect duplicate files, and monitor suspicious file-based activities.</p></div></div>
+  </div>
+
+
+
+  <div class="bottom-banner" id="monitoring" data-aos="fade-up">
+    <h2>Multi Tool Cybersecurity Environment</h2>
+    <p>CyberShield Toolkit combines cybersecurity concepts, networking utilities, encryption systems, and monitoring modules into a single educational platform for practical cybersecurity learning.</p>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  particlesJS("particles-js",{particles:{number:{value:80},color:{value:"#00f0ff"},shape:{type:"circle"},opacity:{value:0.3},size:{value:3},move:{enable:true,speed:1},line_linked:{enable:true,color:"#00f0ff",opacity:0.15}}});
+</script>
+{% endblock %}

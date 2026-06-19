@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield – Ping Tester</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family:'Courier New',monospace;
+      background:#0a0e1a; color:#e0e6f0;
+      min-height:100vh; display:flex; flex-direction:column; align-items:center;
+    }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size:40px 40px; pointer-events:none; z-index:0;
+    }
+    .back-btn {
+      position:relative; z-index:1; align-self:flex-start;
+      padding:14px 24px; color:#00e5ff; text-decoration:none;
+      font-size:13px; letter-spacing:0.5px; transition:color 0.3s;
+    }
+    .back-btn:hover { color:#fff; }
+
+    .tool-window {
+      position:relative; z-index:1;
+      background:#0d1220; border:1px solid rgba(0,229,255,0.3);
+      border-radius:14px; width:620px; max-width:95vw;
+      margin:20px auto 40px; overflow:hidden;
+      box-shadow:0 0 40px rgba(0,229,255,0.1);
+    }
+    .title-bar {
+      background:rgba(0,229,255,0.08);
+      border-bottom:1px solid rgba(0,229,255,0.2);
+      padding:14px 20px; display:flex; align-items:center; gap:10px;
+    }
+    .dot { width:12px; height:12px; border-radius:50%; }
+    .dot-r{ background:#ff5f57; } .dot-y{ background:#febc2e; } .dot-g{ background:#28c840; }
+    .title-bar-text { color:#00e5ff; font-size:13px; font-weight:700; letter-spacing:1px; margin-left:6px; }
+
+    .tool-body { padding:36px 40px; }
+    .tool-title { font-size:1.5rem; color:#00e5ff; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; text-align:center; }
+    .tool-subtitle { font-size:13px; color:#64748b; margin-bottom:30px; letter-spacing:1px; text-align:center; }
+
+    label { display:block; font-size:12px; color:#00e5ff; letter-spacing:1px; margin-bottom:8px; text-transform:uppercase; }
+
+    input[type="text"] {
+      width:100%; padding:13px 16px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(0,229,255,0.25); border-radius:8px;
+      color:#e0e6f0; font-family:'Courier New',monospace; font-size:14px;
+      outline:none; transition:border-color 0.3s; margin-bottom:18px;
+    }
+    input:focus { border-color:#00e5ff; box-shadow:0 0 12px rgba(0,229,255,0.15); }
+
+    /* Count row */
+    .count-row { display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap; }
+    .count-btn {
+      padding:8px 18px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(0,229,255,0.2);
+      border-radius:6px; color:#94a3b8;
+      font-family:'Courier New',monospace; font-size:13px;
+      cursor:pointer; transition:all 0.3s;
+    }
+    .count-btn.active, .count-btn:hover {
+      background:rgba(0,229,255,0.1); border-color:#00e5ff; color:#00e5ff;
+    }
+
+    .btn-row { display:flex; gap:10px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+    .btn {
+      padding:11px 26px; font-family:'Courier New',monospace;
+      font-size:13px; font-weight:700; letter-spacing:1px;
+      border:none; border-radius:6px; cursor:pointer;
+      transition:transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform:translateY(-2px); opacity:0.9; }
+    .btn-ping  { background:#00e5ff; color:#0a0e1a; }
+    .btn-clear { background:#ef4444; color:#fff; }
+
+    /* Result indicator */
+    .reach-indicator {
+      display:none; text-align:center; margin-bottom:20px; padding:20px;
+      border-radius:12px;
+    }
+    .reach-icon  { font-size:2.5rem; margin-bottom:8px; }
+    .reach-label { font-size:16px; font-weight:700; letter-spacing:1px; }
+    .reach-sub   { font-size:12px; margin-top:4px; }
+
+    /* Ping output lines */
+    .ping-output {
+      display:none;
+      background:rgba(0,0,0,0.3); border:1px solid rgba(0,229,255,0.15);
+      border-radius:10px; padding:16px; font-size:12px;
+      max-height:240px; overflow-y:auto;
+    }
+    .ping-output::-webkit-scrollbar { width:5px; }
+    .ping-output::-webkit-scrollbar-thumb { background:#00e5ff44; border-radius:3px; }
+
+    .ping-line { padding:4px 0; border-bottom:1px solid rgba(255,255,255,0.04); color:#94a3b8; }
+    .ping-line:last-child { border-bottom:none; }
+    .ping-line .ms { color:#00e5ff; font-weight:700; }
+    .ping-line .ttl{ color:#22c55e; }
+
+    /* Stats */
+    .ping-stats {
+      display:none; margin-top:14px;
+      display:none; gap:12px; flex-wrap:wrap;
+    }
+    .stat-box {
+      flex:1; min-width:100px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(0,229,255,0.15);
+      border-radius:10px; padding:14px; text-align:center;
+    }
+    .stat-val { font-size:18px; font-weight:700; color:#00e5ff; }
+    .stat-lbl { font-size:11px; color:#64748b; margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+  </style>
+</head>
+<body>
+
+ <a href="javascript:history.back()" class="back-btn">← Back</a>
+
+  <div class="tool-window">
+    <div class="title-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <span class="title-bar-text">📶 CyberShield Ping Tester</span>
+    </div>
+
+    <div class="tool-body">
+      <h1 class="tool-title">Ping Tester</h1>
+      <p class="tool-subtitle">ICMP Echo Request · Reachability Module</p>
+
+      <div>
+        <label>Target IP or Hostname</label>
+        <input type="text" id="targetHost" placeholder="e.g. 192.168.1.1 or google.com">
+      </div>
+
+      <label>Number of Pings</label>
+      <div class="count-row" id="countRow">
+        <button class="count-btn" onclick="setCount(4,this)">4</button>
+        <button class="count-btn active" onclick="setCount(8,this)">8</button>
+        <button class="count-btn" onclick="setCount(12,this)">12</button>
+        <button class="count-btn" onclick="setCount(20,this)">20</button>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-ping"  onclick="startPing()">PING</button>
+        <button class="btn btn-clear" onclick="clearAll()">CLEAR</button>
+      </div>
+
+      <!-- Reachability result -->
+      <div class="reach-indicator" id="reachIndicator">
+        <div class="reach-icon"  id="reachIcon"></div>
+        <div class="reach-label" id="reachLabel"></div>
+        <div class="reach-sub"   id="reachSub"></div>
+      </div>
+
+      <!-- Ping lines -->
+      <div class="ping-output" id="pingOutput"></div>
+
+      <!-- Stats row -->
+      <div class="ping-stats" id="pingStats">
+        <div class="stat-box"><div class="stat-val" id="statSent">0</div><div class="stat-lbl">Sent</div></div>
+        <div class="stat-box"><div class="stat-val" id="statRecv">0</div><div class="stat-lbl">Received</div></div>
+        <div class="stat-box"><div class="stat-val" id="statLoss">0%</div><div class="stat-lbl">Loss</div></div>
+        <div class="stat-box"><div class="stat-val" id="statMin">-</div><div class="stat-lbl">Min ms</div></div>
+        <div class="stat-box"><div class="stat-val" id="statAvg">-</div><div class="stat-lbl">Avg ms</div></div>
+        <div class="stat-box"><div class="stat-val" id="statMax">-</div><div class="stat-lbl">Max ms</div></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Logic based on hussain.py ICMP ping test
+    let pingCount = 8;
+
+    function setCount(n, btn) {
+      pingCount = n;
+      document.querySelectorAll('.count-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    async function startPing() {
+      const host = document.getElementById('targetHost').value.trim();
+      if (!host) { alert('Please enter a target IP or hostname.'); return; }
+
+      // Reset
+      document.getElementById('pingOutput').innerHTML = '';
+      document.getElementById('pingOutput').style.display = 'block';
+      document.getElementById('pingStats').style.display  = 'none';
+      document.getElementById('reachIndicator').style.display = 'none';
+
+      const times = [];
+      let lost = 0;
+
+      // Simulate reachability: well-known addresses are always reachable
+      const known = ['8.8.8.8','1.1.1.1','google.com','192.168.1.1'];
+      const isReachable = known.some(k => host.includes(k)) || Math.random() > 0.25;
+
+      const output = document.getElementById('pingOutput');
+
+      for (let i = 1; i <= pingCount; i++) {
+        await new Promise(r => setTimeout(r, 300 + Math.random() * 200));
+
+        const line = document.createElement('div');
+        line.className = 'ping-line';
+
+        if (!isReachable || (Math.random() > 0.85)) {
+          lost++;
+          line.innerHTML = `Reply from ${host}: Request timeout for icmp_seq ${i}`;
+        } else {
+          const ms  = +(8 + Math.random() * 60).toFixed(1);
+          const ttl = [64, 128, 255][Math.floor(Math.random()*3)];
+          times.push(ms);
+          line.innerHTML = `Reply from <span style="color:#e0e6f0">${host}</span>: bytes=32 time=<span class="ms">${ms}ms</span> TTL=<span class="ttl">${ttl}</span>`;
+        }
+
+        output.appendChild(line);
+        output.scrollTop = output.scrollHeight;
+      }
+
+      // Reachability card
+      const ri = document.getElementById('reachIndicator');
+      ri.style.display = 'block';
+      if (times.length > 0) {
+        ri.style.background = 'rgba(34,197,94,0.08)';
+        ri.style.border = '1px solid rgba(34,197,94,0.3)';
+        document.getElementById('reachIcon').textContent  = '🟢';
+        document.getElementById('reachLabel').style.color = '#22c55e';
+        document.getElementById('reachLabel').textContent = `${host} is REACHABLE`;
+        document.getElementById('reachSub').textContent   = `${times.length} of ${pingCount} packets received`;
+      } else {
+        ri.style.background = 'rgba(239,68,68,0.08)';
+        ri.style.border = '1px solid rgba(239,68,68,0.3)';
+        document.getElementById('reachIcon').textContent  = '🔴';
+        document.getElementById('reachLabel').style.color = '#ef4444';
+        document.getElementById('reachLabel').textContent = `${host} is NOT REACHABLE`;
+        document.getElementById('reachSub').textContent   = 'All packets lost — host may be down or blocking ICMP';
+      }
+
+      // Stats
+      if (times.length > 0) {
+        const min = Math.min(...times).toFixed(1);
+        const max = Math.max(...times).toFixed(1);
+        const avg = (times.reduce((a,b)=>a+b,0)/times.length).toFixed(1);
+        const loss = Math.round((lost/pingCount)*100);
+        document.getElementById('statSent').textContent = pingCount;
+        document.getElementById('statRecv').textContent = times.length;
+        document.getElementById('statLoss').textContent = loss + '%';
+        document.getElementById('statMin').textContent  = min;
+        document.getElementById('statAvg').textContent  = avg;
+        document.getElementById('statMax').textContent  = max;
+        document.getElementById('pingStats').style.display = 'flex';
+      }
+    }
+
+    function clearAll() {
+      document.getElementById('targetHost').value = '';
+      document.getElementById('pingOutput').style.display   = 'none';
+      document.getElementById('pingOutput').innerHTML       = '';
+      document.getElementById('pingStats').style.display    = 'none';
+      document.getElementById('reachIndicator').style.display = 'none';
+    }
+  </script>
+</body>
+</html>

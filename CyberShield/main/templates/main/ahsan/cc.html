@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield – Caesar Cipher</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0e1a;
+      color: #e0e6f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+
+    .back-btn {
+      position: relative; z-index: 1;
+      align-self: flex-start;
+      padding: 14px 24px;
+      color: #00e5ff; text-decoration: none;
+      font-size: 13px; letter-spacing: 0.5px;
+      transition: color 0.3s;
+    }
+    .back-btn:hover { color: #fff; }
+
+    .tool-window {
+      position: relative; z-index: 1;
+      background: #0d1220;
+      border: 1px solid rgba(0,229,255,0.3);
+      border-radius: 14px;
+      width: 600px; max-width: 95vw;
+      margin: 20px auto 40px;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0,229,255,0.1);
+    }
+
+    .title-bar {
+      background: rgba(0,229,255,0.08);
+      border-bottom: 1px solid rgba(0,229,255,0.2);
+      padding: 14px 20px;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .title-bar-dot { width:12px; height:12px; border-radius:50%; }
+    .dot-red   { background:#ff5f57; }
+    .dot-yellow{ background:#febc2e; }
+    .dot-green { background:#28c840; }
+    .title-bar-text { color:#00e5ff; font-size:13px; font-weight:700; letter-spacing:1px; margin-left:6px; }
+
+    .tool-body { padding: 36px 40px; text-align: center; }
+
+    .tool-title {
+      font-size: 1.5rem; color: #00e5ff;
+      letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+    }
+    .tool-subtitle { font-size:13px; color:#64748b; margin-bottom:30px; letter-spacing:1px; }
+
+    /* Mode toggle */
+    .mode-toggle {
+      display: flex;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+    }
+    .mode-btn {
+      flex: 1; padding: 11px;
+      background: none; border: none;
+      color: #64748b; font-family:'Courier New',monospace;
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 1px; cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+    .mode-btn.active {
+      background: #00e5ff;
+      color: #0a0e1a;
+    }
+
+    label {
+      display: block; font-size:12px; color:#00e5ff;
+      letter-spacing:1px; margin-bottom:8px; text-transform:uppercase; text-align:left;
+    }
+
+    textarea {
+      width: 100%;
+      padding: 14px 16px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0,229,255,0.25);
+      border-radius: 8px;
+      color: #e0e6f0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      outline: none;
+      resize: vertical;
+      min-height: 90px;
+      transition: border-color 0.3s;
+      margin-bottom: 18px;
+    }
+    textarea:focus { border-color: #00e5ff; box-shadow: 0 0 12px rgba(0,229,255,0.15); }
+
+    /* Shift slider */
+    .shift-row {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 20px; text-align: left;
+    }
+    .shift-row label { margin: 0; white-space: nowrap; }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: #00e5ff;
+      height: 6px;
+    }
+
+    .shift-val {
+      background: rgba(0,229,255,0.1);
+      border: 1px solid rgba(0,229,255,0.3);
+      color: #00e5ff;
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      min-width: 48px;
+      text-align: center;
+    }
+
+    .btn-row { display:flex; gap:10px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+
+    .btn {
+      padding: 11px 26px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px; font-weight:700; letter-spacing:1px;
+      border: none; border-radius:6px; cursor:pointer;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); opacity:0.9; }
+    .btn-run    { background: #00e5ff; color: #0a0e1a; }
+    .btn-copy   { background: #22c55e; color: #fff; }
+    .btn-clear  { background: #ef4444; color: #fff; }
+
+    .output-box {
+      display: none;
+      background: rgba(0,229,255,0.05);
+      border: 1px solid rgba(0,229,255,0.2);
+      border-radius: 10px;
+      padding: 18px;
+      text-align: left;
+      font-size: 14px;
+      color: #00e5ff;
+      word-break: break-all;
+      line-height: 1.7;
+      white-space: pre-wrap;
+    }
+
+    .output-label {
+      display: none;
+      font-size: 12px; color:#64748b;
+      letter-spacing:1px; text-transform:uppercase;
+      text-align:left; margin-bottom:8px; margin-top:4px;
+    }
+
+    .copy-notice {
+      display: none;
+      color: #22c55e; font-size: 13px; margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+
+  <div class="tool-window">
+    <div class="title-bar">
+      <div class="title-bar-dot dot-red"></div>
+      <div class="title-bar-dot dot-yellow"></div>
+      <div class="title-bar-dot dot-green"></div>
+      <span class="title-bar-text">🔄 CyberShield Caesar Cipher</span>
+    </div>
+
+    <div class="tool-body">
+      <h1 class="tool-title">Caesar Cipher</h1>
+      <p class="tool-subtitle">Encrypt · Decrypt · Classic Substitution Cipher</p>
+
+      <!-- Mode toggle: Encrypt / Decrypt -->
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="encBtn" onclick="setMode('encrypt')">🔒 ENCRYPT</button>
+        <button class="mode-btn"        id="decBtn" onclick="setMode('decrypt')">🔓 DECRYPT</button>
+      </div>
+
+      <!-- Input text -->
+      <div>
+        <label id="inputLabel">Text to Encrypt</label>
+        <textarea id="inputText" placeholder="Enter text here…"></textarea>
+      </div>
+
+      <!-- Shift slider -->
+      <div class="shift-row">
+        <label>Shift Key</label>
+        <input type="range" id="shiftSlider" min="1" max="25" value="3"
+               oninput="document.getElementById('shiftDisplay').textContent=this.value">
+        <div class="shift-val" id="shiftDisplay">3</div>
+      </div>
+
+      <!-- Buttons -->
+      <div class="btn-row">
+        <button class="btn btn-run"   onclick="runCipher()">RUN</button>
+        <button class="btn btn-copy"  onclick="copyOutput()">COPY</button>
+        <button class="btn btn-clear" onclick="clearAll()">CLEAR</button>
+      </div>
+
+      <!-- Output -->
+      <div class="output-label" id="outputLabel">Output</div>
+      <div class="output-box"   id="outputBox"></div>
+      <div class="copy-notice"  id="copyNotice">✔ Copied to clipboard!</div>
+    </div>
+  </div>
+
+  <script>
+    // ── LOGIC (from ahsan.py – caesar) ──────────────────────
+
+    let currentMode = 'encrypt';
+
+    function setMode(mode) {
+      currentMode = mode;
+      document.getElementById('encBtn').classList.toggle('active', mode === 'encrypt');
+      document.getElementById('decBtn').classList.toggle('active', mode === 'decrypt');
+      document.getElementById('inputLabel').textContent =
+        mode === 'encrypt' ? 'Text to Encrypt' : 'Text to Decrypt';
+      clearAll();
+    }
+
+    function caesarShift(text, shift) {
+      let result = '';
+      for (let ch of text) {
+        if (/[A-Za-z]/.test(ch)) {
+          const base = ch === ch.toUpperCase() ? 65 : 97;
+          result += String.fromCharCode(((ch.charCodeAt(0) - base + shift + 26) % 26) + base);
+        } else {
+          result += ch;
+        }
+      }
+      return result;
+    }
+
+    function runCipher() {
+      const text  = document.getElementById('inputText').value;
+      const shift = parseInt(document.getElementById('shiftSlider').value);
+
+      if (!text.trim()) return;
+
+      const actualShift = currentMode === 'encrypt' ? shift : (26 - shift);
+      const output = caesarShift(text, actualShift);
+
+      document.getElementById('outputLabel').style.display = 'block';
+      document.getElementById('outputBox').style.display   = 'block';
+      document.getElementById('outputLabel').textContent   =
+        currentMode === 'encrypt' ? 'Encrypted Output' : 'Decrypted Output';
+      document.getElementById('outputBox').textContent     = output;
+      document.getElementById('copyNotice').style.display  = 'none';
+    }
+
+    function copyOutput() {
+      const txt = document.getElementById('outputBox').textContent;
+      if (!txt) return;
+      navigator.clipboard.writeText(txt).then(() => {
+        const n = document.getElementById('copyNotice');
+        n.style.display = 'block';
+        setTimeout(() => n.style.display = 'none', 2000);
+      });
+    }
+
+    function clearAll() {
+      document.getElementById('inputText').value            = '';
+      document.getElementById('outputBox').style.display   = 'none';
+      document.getElementById('outputLabel').style.display = 'none';
+      document.getElementById('copyNotice').style.display  = 'none';
+    }
+  </script>
+
+</body>
+</html>

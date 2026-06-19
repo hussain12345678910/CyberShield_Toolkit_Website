@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}CyberShield Toolkit{% endblock %}
+
+{% block body %}
+<div id="particles-js"></div>
+
+<div class="floating-icon" style="top:20%;left:10%;"><i class="bi bi-shield-lock"></i></div>
+<div class="floating-icon" style="top:70%;left:85%;"><i class="bi bi-cpu"></i></div>
+<div class="floating-icon" style="top:45%;left:75%;"><i class="bi bi-router"></i></div>
+<div class="floating-icon" style="top:80%;left:20%;"><i class="bi bi-terminal"></i></div>
+
+<nav class="navbar navbar-expand-lg fixed-top">
+  <div class="container">
+    <a class="navbar-brand" href="{% url 'index' %}">CyberShield</a>
+    <button class="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item"><a class="nav-link" href="#home">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+        <li class="nav-item"><a class="nav-link" href="#team">Team</a></li>
+        <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+        <li class="nav-item ms-lg-3 mt-3 mt-lg-0">
+          <a href="{% url 'login' %}" class="launch-btn">Launch Dashboard</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<section class="hero" id="home">
+  <div class="container">
+    <div class="row align-items-center gy-5 mt-4">
+      <div class="col-lg-7" data-aos="fade-right">
+        <div class="typing-text">> ACCESSING SECURE CYBER NETWORK...</div>
+        <h1 class="hero-title">CYBERSHIELD <br><span>TOOLKIT</span></h1>
+        <p class="hero-text">A futuristic cybersecurity learning platform developed using Python and Django. CyberShield Toolkit integrates security tools, monitoring systems, packet analysis, encryption modules, and networking utilities into one centralized cyber defense dashboard.</p>
+        <div class="hero-buttons">
+          <a href="#features" class="primary-btn">Explore Features</a>
+          <a href="#team" class="secondary-btn">Meet Team</a>
+        </div>
+      </div>
+      <div class="col-lg-5" data-aos="fade-left">
+        <div class="hero-card">
+          <div class="terminal">
+            <p>> Initializing CyberShield...</p>
+            <p>> Loading Security Modules...</p>
+            <p>> Network Tools Ready</p>
+            <p>> Encryption Active</p>
+            <p>> Monitoring System...</p>
+            <p>> Status: <span style="color:#00ff88;">ONLINE</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="features">
+  <div class="container">
+    <div class="section-title" data-aos="fade-up">
+      <h2>Security <span>Modules</span></h2>
+      <p>Integrated cybersecurity tools for networking, encryption, packet monitoring, system analysis, and security experimentation.</p>
+    </div>
+    <div class="row g-4">
+      {% for icon, title, desc in features %}
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in">
+        <div class="feature-card">
+          <div class="feature-icon"><i class="bi {{ icon }}"></i></div>
+          <h4>{{ title }}</h4>
+          <p>{{ desc }}</p>
+        </div>
+      </div>
+      {% empty %}
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in">
+        <div class="feature-card"><div class="feature-icon"><i class="bi bi-router"></i></div><h4>Port Scanner</h4><p>Scan target systems and identify active ports using Python-based socket networking utilities.</p></div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="100">
+        <div class="feature-card"><div class="feature-icon"><i class="bi bi-shield-lock"></i></div><h4>Encryption Toolkit</h4><p>Secure and decrypt sensitive information using cryptographic algorithms and hashing methods.</p></div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="200">
+        <div class="feature-card"><div class="feature-icon"><i class="bi bi-globe"></i></div><h4>DNS Lookup</h4><p>Retrieve DNS records and analyze network communication structures in real time.</p></div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in">
+        <div class="feature-card"><div class="feature-icon"><i class="bi bi-terminal"></i></div><h4>Packet Analyzer</h4><p>Monitor incoming and outgoing packets for cybersecurity learning and traffic analysis.</p></div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="100">
+        <div class="feature-card"><div class="feature-icon"><i class="bi bi-key"></i></div><h4>Password Checker</h4><p>Analyze password strength and identify weak authentication credentials.</p></div>
+      </div>
+      <div class="col-lg-4 col-md-6" data-aos="zoom-in" data-aos-delay="200">
+        <div class="feature-card"><div class="feature-icon"><i class="bi bi-cpu"></i></div><h4>System Monitoring</h4><p>Track CPU usage, memory activity, and overall system performance using monitoring tools.</p></div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="section" id="team">
+  <div class="container">
+    <div class="section-title" data-aos="fade-up">
+      <h2>Cyber <span>Agents</span></h2>
+      <p>Meet the cybersecurity development team responsible for architecture, encryption, monitoring, and networking systems.</p>
+    </div>
+    <div class="row g-4 justify-content-center">
+      <div class="col-lg-3 col-md-6" data-aos="flip-left">
+        <div class="team-card"><div class="team-avatar">U</div><h4>Zunaira Arshad</h4><div class="team-role">Project Lead / System Architect / Frontend Developer</div><p>Frontend, UI, integration, testing</p></div>
+      </div>
+          <div class="col-lg-3 col-md-6" data-aos="flip-left" data-aos-delay="300">
+        <div class="team-card"><div class="team-avatar">Z</div><h4>Unaiza Rehman</h4><div class="team-role">File Tools Dev</div><p>File integrity, logs, metadata </p> <br> <br><br></div>
+      </div>
+      <div class="col-lg-3 col-md-6" data-aos="flip-left" data-aos-delay="100">
+        <div class="team-card"><div class="team-avatar">H</div><h4>Hussain</h4><div class="team-role">Backend Dev & Network Tool Dev</div><p>API system, tool execution & network tools development</p><br></div>
+      </div>
+      <div class="col-lg-3 col-md-6" data-aos="flip-left" data-aos-delay="200">
+        <div class="team-card"><div class="team-avatar">A</div><h4>Ahsan</h4><div class="team-role">Security Dev</div><p>Encryption, hashing, passwords</p><br><br></div>
+      </div>
+  
+    </div>
+  </div>
+</section>
+
+<section class="section" id="about">
+  <div class="container">
+    <div class="cta-box" data-aos="zoom-in">
+      <h2>Cybersecurity Learning Reimagined</h2>
+      <p>CyberShield Toolkit is designed as a modern cybersecurity platform where students can explore networking, security monitoring, encryption systems, and practical Python-based security tools inside a futuristic digital environment.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-logo">CyberShield Toolkit</div>
+    <p>Developed By Department Of Software Engineering</p>
+    <span>NO SYSTEM IS SAFE</span>
+  </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  particlesJS("particles-js",{particles:{number:{value:80},color:{value:"#00f0ff"},shape:{type:"circle"},opacity:{value:0.3},size:{value:3},move:{enable:true,speed:1},line_linked:{enable:true,color:"#00f0ff",opacity:0.15}}});
+</script>
+{% endblock %}

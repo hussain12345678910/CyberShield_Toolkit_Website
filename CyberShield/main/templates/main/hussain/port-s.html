@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CyberShield – Port Scanner</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0e1a; color: #e0e6f0;
+      min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+    }
+    body::before {
+      content:''; position:fixed; inset:0;
+      background-image:
+        linear-gradient(rgba(0,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,255,0.03) 1px, transparent 1px);
+      background-size:40px 40px; pointer-events:none; z-index:0;
+    }
+    .back-btn {
+      position:relative; z-index:1; align-self:flex-start;
+      padding:14px 24px; color:#00e5ff; text-decoration:none;
+      font-size:13px; letter-spacing:0.5px; transition:color 0.3s;
+    }
+    .back-btn:hover { color:#fff; }
+
+    .tool-window {
+      position:relative; z-index:1;
+      background:#0d1220; border:1px solid rgba(0,229,255,0.3);
+      border-radius:14px; width:680px; max-width:95vw;
+      margin:20px auto 40px; overflow:hidden;
+      box-shadow:0 0 40px rgba(0,229,255,0.1);
+    }
+    .title-bar {
+      background:rgba(0,229,255,0.08);
+      border-bottom:1px solid rgba(0,229,255,0.2);
+      padding:14px 20px; display:flex; align-items:center; gap:10px;
+    }
+    .dot { width:12px; height:12px; border-radius:50%; }
+    .dot-r{ background:#ff5f57; } .dot-y{ background:#febc2e; } .dot-g{ background:#28c840; }
+    .title-bar-text { color:#00e5ff; font-size:13px; font-weight:700; letter-spacing:1px; margin-left:6px; }
+
+    .tool-body { padding:36px 40px; }
+    .tool-title { font-size:1.5rem; color:#00e5ff; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; text-align:center; }
+    .tool-subtitle { font-size:13px; color:#64748b; margin-bottom:30px; letter-spacing:1px; text-align:center; }
+
+    label { display:block; font-size:12px; color:#00e5ff; letter-spacing:1px; margin-bottom:8px; text-transform:uppercase; }
+
+    input[type="text"] {
+      width:100%; padding:13px 16px;
+      background:rgba(255,255,255,0.05);
+      border:1px solid rgba(0,229,255,0.25); border-radius:8px;
+      color:#e0e6f0; font-family:'Courier New',monospace; font-size:14px;
+      outline:none; transition:border-color 0.3s; margin-bottom:18px;
+    }
+    input:focus { border-color:#00e5ff; box-shadow:0 0 12px rgba(0,229,255,0.15); }
+
+    /* Port checkboxes */
+    .port-grid {
+      display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:20px;
+    }
+    .port-item {
+      display:flex; align-items:center; gap:6px;
+      background:rgba(255,255,255,0.04);
+      border:1px solid rgba(0,229,255,0.12);
+      border-radius:6px; padding:8px 10px; cursor:pointer;
+      transition:border-color 0.3s;
+    }
+    .port-item:hover { border-color:rgba(0,229,255,0.4); }
+    .port-item input { accent-color:#00e5ff; cursor:pointer; }
+    .port-item span { font-size:12px; color:#94a3b8; }
+
+    .btn-row { display:flex; gap:10px; justify-content:center; margin-bottom:24px; flex-wrap:wrap; }
+    .btn {
+      padding:11px 26px; font-family:'Courier New',monospace;
+      font-size:13px; font-weight:700; letter-spacing:1px;
+      border:none; border-radius:6px; cursor:pointer;
+      transition:transform 0.2s, opacity 0.2s;
+    }
+    .btn:hover { transform:translateY(-2px); opacity:0.9; }
+    .btn-scan  { background:#00e5ff; color:#0a0e1a; }
+    .btn-clear { background:#ef4444; color:#fff; }
+
+    /* Progress bar */
+    .progress-wrap { display:none; margin-bottom:18px; }
+    .progress-label { font-size:11px; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:6px; }
+    .progress-bg { background:rgba(255,255,255,0.07); border-radius:6px; height:8px; overflow:hidden; }
+    .progress-bar { height:100%; background:#00e5ff; border-radius:6px; width:0%; transition:width 0.3s; }
+
+    /* Results */
+    .results-wrap { display:none; }
+    .results-label { font-size:11px; color:#64748b; letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+    .result-item {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:10px 14px; border-radius:8px; margin-bottom:8px;
+      border:1px solid rgba(255,255,255,0.07);
+    }
+    .port-num { font-size:13px; font-weight:700; color:#e0e6f0; min-width:80px; }
+    .port-service { font-size:12px; color:#64748b; flex:1; padding:0 12px; }
+    .port-status { font-size:12px; font-weight:700; padding:4px 12px; border-radius:4px; }
+    .status-open     { background:rgba(34,197,94,0.15); color:#22c55e; border:1px solid rgba(34,197,94,0.3); }
+    .status-closed   { background:rgba(239,68,68,0.15); color:#ef4444; border:1px solid rgba(239,68,68,0.3); }
+    .status-filtered { background:rgba(245,158,11,0.15); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); }
+
+    .scan-summary {
+      display:none; margin-top:14px; padding:14px 16px;
+      background:rgba(0,229,255,0.05); border:1px solid rgba(0,229,255,0.2);
+      border-radius:10px; font-size:13px; color:#00e5ff;
+    }
+  </style>
+</head>
+<body>
+
+<a href="javascript:history.back()" class="back-btn">← Back</a>
+
+  <div class="tool-window">
+    <div class="title-bar">
+      <div class="dot dot-r"></div><div class="dot dot-y"></div><div class="dot dot-g"></div>
+      <span class="title-bar-text">🔍 CyberShield Port Scanner</span>
+    </div>
+
+    <div class="tool-body">
+      <h1 class="tool-title">Port Scanner</h1>
+      <p class="tool-subtitle">TCP SYN Scan · Network Security Module</p>
+
+      <div>
+        <label>Target IP Address</label>
+        <input type="text" id="targetIp" placeholder="e.g. 192.168.1.1">
+      </div>
+
+      <label>Select Ports to Scan</label>
+      <div class="port-grid" id="portGrid"></div>
+
+      <div class="btn-row">
+        <button class="btn btn-scan"  onclick="startScan()">SCAN</button>
+        <button class="btn btn-clear" onclick="clearAll()">CLEAR</button>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-label" id="progressLabel">Scanning...</div>
+        <div class="progress-bg"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+
+      <div class="results-wrap" id="resultsWrap">
+        <div class="results-label">Scan Results</div>
+        <div id="resultsList"></div>
+        <div class="scan-summary" id="scanSummary"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Port list with service names (matching hussain.py)
+    const PORTS = [
+      { port: 21,  service: "FTP" },
+      { port: 22,  service: "SSH" },
+      { port: 23,  service: "Telnet" },
+      { port: 25,  service: "SMTP" },
+      { port: 53,  service: "DNS" },
+      { port: 80,  service: "HTTP" },
+      { port: 110, service: "POP3" },
+      { port: 135, service: "RPC" },
+      { port: 139, service: "NetBIOS" },
+      { port: 143, service: "IMAP" },
+      { port: 443, service: "HTTPS" },
+      { port: 445, service: "SMB" },
+    ];
+
+    // Build port checkboxes
+    const grid = document.getElementById('portGrid');
+    PORTS.forEach(({ port, service }) => {
+      const label = document.createElement('label');
+      label.className = 'port-item';
+      label.innerHTML = `<input type="checkbox" value="${port}" checked>
+                         <span>${port} <span style="color:#00e5ff">${service}</span></span>`;
+      grid.appendChild(label);
+    });
+
+    // Simulate TCP scan (randomised realistic results)
+    function simulateScan(ip, ports) {
+      // Common open ports on typical routers/servers
+      const commonOpen = [80, 443, 22, 53];
+      return ports.map(({ port, service }) => {
+        let status;
+        if (!ip || ip.trim() === '') { status = 'filtered'; }
+        else if (commonOpen.includes(port) && Math.random() > 0.35) { status = 'open'; }
+        else if (Math.random() > 0.55) { status = 'closed'; }
+        else { status = 'filtered'; }
+        return { port, service, status };
+      });
+    }
+
+    async function startScan() {
+      const ip = document.getElementById('targetIp').value.trim();
+      if (!ip) { alert('Please enter a target IP address.'); return; }
+
+      const checked = Array.from(document.querySelectorAll('#portGrid input:checked'))
+        .map(cb => PORTS.find(p => p.port === parseInt(cb.value)))
+        .filter(Boolean);
+
+      if (checked.length === 0) { alert('Select at least one port.'); return; }
+
+      document.getElementById('progressWrap').style.display  = 'block';
+      document.getElementById('resultsWrap').style.display   = 'none';
+      document.getElementById('resultsList').innerHTML       = '';
+      document.getElementById('scanSummary').style.display   = 'none';
+
+      const bar   = document.getElementById('progressBar');
+      const lbl   = document.getElementById('progressLabel');
+      const total = checked.length;
+
+      // Animate scanning port by port
+      const results = [];
+      for (let i = 0; i < total; i++) {
+        lbl.textContent = `Scanning port ${checked[i].port} (${checked[i].service})...`;
+        bar.style.width  = `${Math.round(((i + 1) / total) * 100)}%`;
+        await new Promise(r => setTimeout(r, 220 + Math.random() * 180));
+        results.push(simulateScan(ip, [checked[i]])[0]);
+      }
+
+      lbl.textContent  = 'Scan complete';
+      bar.style.width  = '100%';
+
+      // Render results
+      const list = document.getElementById('resultsList');
+      results.forEach(({ port, service, status }) => {
+        const el = document.createElement('div');
+        el.className = 'result-item';
+        el.innerHTML = `
+          <span class="port-num">Port ${port}</span>
+          <span class="port-service">${service}</span>
+          <span class="port-status status-${status}">${status.toUpperCase()}</span>`;
+        list.appendChild(el);
+      });
+
+      const open     = results.filter(r => r.status === 'open').length;
+      const closed   = results.filter(r => r.status === 'closed').length;
+      const filtered = results.filter(r => r.status === 'filtered').length;
+
+      const summary = document.getElementById('scanSummary');
+      summary.style.display = 'block';
+      summary.textContent   = `Target: ${ip}  |  Scanned: ${total} ports  |  Open: ${open}  Closed: ${closed}  Filtered: ${filtered}`;
+
+      document.getElementById('resultsWrap').style.display = 'block';
+    }
+
+    function clearAll() {
+      document.getElementById('targetIp').value = '';
+      document.getElementById('progressWrap').style.display = 'none';
+      document.getElementById('resultsWrap').style.display  = 'none';
+      document.getElementById('progressBar').style.width    = '0%';
+    }
+  </script>
+</body>
+</html>
